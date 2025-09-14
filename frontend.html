@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSPM JSCOE Voice Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1e40af;
+            --secondary: #3b82f6;
+            --accent: #60a5fa;
+            --text: #1f2937;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --border-radius: 24px;
+            --wave-height: 8px;
+        }
+
+        [data-theme="dark"] {
+            --primary: #3b82f6;
+            --secondary: #2563eb;
+            --accent: #93c5fd;
+            --text: #f9fafb;
+            --bg: #111827;
+            --card-bg: #1f2937;
+            --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: background 0.4s ease;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            position: relative;
+            background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYXV0byIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIiB4PSIwIiB5PSIwIj48cmVjdCB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIGZpbGw9Im5vbmUiLz48Y2lyY2xlIGN4PSIxMCIgY3k9IjEwIiByPSIyIiBmaWxsPSJjdXJyZW50Q29sb3IiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKGF1dG8pIi8+PC9zdmc+') repeat;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            color: white;
+            font-weight: bold;
+            font-size: 1.4rem;
+            box-shadow: var(--shadow);
+        }
+
+        .college-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 5px;
+        }
+
+        .college-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            color: var(--text);
+        }
+
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            opacity: 0.7;
+            flex-wrap: wrap;
+        }
+
+        .contact-info span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Main Chat Area */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 18px 24px;
+            border-radius: var(--border-radius);
+            animation: slideIn 0.4s ease-out;
+            position: relative;
+            box-shadow: var(--shadow);
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-bottom-right-radius: 4px;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .ai-message {
+            background: var(--card-bg);
+            color: var(--text);
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+            margin-right: auto;
+            position: relative;
+        }
+
+        .ai-message::before {
+            content: '';
+            position: absolute;
+            left: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-right: 10px solid var(--card-bg);
+        }
+
+        .user-message::before {
+            content: '';
+            position: absolute;
+            right: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-left: 10px solid linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+
+        .audio-response {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border-radius: 18px;
+            margin: 10px 0;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .audio-response.dark {
+            background: #1f2937;
+        }
+
+        .audio-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .audio-waveform {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 24px;
+            flex: 1;
+        }
+
+        .wave {
+            width: 4px;
+            background: var(--accent);
+            border-radius: 2px;
+            animation: wave 1.2s infinite ease-in-out;
+        }
+
+        .wave:nth-child(1) { animation-delay: 0s; }
+        .wave:nth-child(2) { animation-delay: 0.1s; }
+        .wave:nth-child(3) { animation-delay: 0.2s; }
+        .wave:nth-child(4) { animation-delay: 0.3s; }
+        .wave:nth-child(5) { animation-delay: 0.4s; }
+
+        @keyframes wave {
+            0%, 100% { height: 6px; }
+            50% { height: 24px; }
+        }
+
+        /* Mic Button */
+        .mic-button {
+            position: fixed;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: white;
+            font-size: 2rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-10px); }
+        }
+
+        .mic-button.recording {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            animation: none;
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.5);
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        .mic-button i {
+            transition: transform 0.3s ease;
+        }
+
+        .mic-button.recording i {
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .status-bar {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            color: #6b7280;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .status-bar.show {
+            opacity: 1;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px 10px;
+            font-size: 0.8rem;
+            opacity: 0.6;
+            color: var(--text);
+            margin-top: auto;
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 16px;
+            border-radius: 18px;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 0.9rem;
+            max-width: 80%;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .header {
+                padding: 15px 0;
+            }
+            .college-name {
+                font-size: 1.2rem;
+            }
+            .mic-button {
+                width: 70px;
+                height: 70px;
+                font-size: 1.8rem;
+            }
+            .contact-info {
+                font-size: 0.75rem;
+                gap: 8px;
+            }
+        }
+
+        /* Dark Mode Tweaks */
+        [data-theme="dark"] .status-bar {
+            background: rgba(31, 41, 55, 0.8);
+            color: #e5e7eb;
+        }
+
+        [data-theme="dark"] .audio-response {
+            background: #2d3748;
+        }
+
+        [data-theme="dark"] .audio-response.dark {
+            background: #1f2937;
+        }
+
+        [data-theme="dark"] .ai-message {
+            background: #2d3748;
+        }
+
+        [data-theme="dark"] .user-message {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        }
+
+        [data-theme="dark"] .wave {
+            background: #93c5fd;
+        }
+
+        [data-theme="dark"] .footer,
+        [data-theme="dark"] .contact-info,
+        [data-theme="dark"] .college-subtitle {
+            color: #9ca3af;
+        }
+
+        [data-theme="dark"] .error {
+            background: #374151;
+            color: #fca5a5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">JS</div>
+            <h2 class="college-name">JSPM JSCOE</h2>
+            <p class="college-subtitle">Voice AI Assistant for Admissions & College Info</p>
+            <div class="contact-info">
+                <span><i class="fas fa-map-marker-alt"></i> Hadapsar, Pune</span>
+                <span><i class="fas fa-phone"></i> +91-20-26998000</span>
+                <span><i class="fas fa-envelope"></i> info@jspmjscoe.edu.in</span>
+                <span><i class="fas fa-globe"></i> jspmjscoe.edu.in</span>
+            </div>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="chat-container" id="chatContainer">
+            <div class="message ai-message">
+                Hello! I'm your JSPM JSCOE Voice Assistant. Ask me anything about admissions, courses, placements, or campus events.
+                <div style="font-size: 0.8rem; margin-top: 8px; opacity: 0.7;">Just now</div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar" id="statusBar">Connecting...</div>
+
+        <!-- Theme Toggle -->
+        <button class="theme-toggle" id="themeToggle">🌙</button>
+
+        <!-- Mic Button -->
+        <button class="mic-button" id="micButton">
+            <i class="fas fa-microphone"></i>
+        </button>
+
+        <!-- Footer -->
+        <div class="footer">
+            © 2025 JSPM's Jayawantrao Sawant College of Engineering (JSCOE)<br>
+            Survey No. 58, Hadapsar, Pune - 411028, Maharashtra, India<br>
+            Affiliated to SPPU | Approved by AICTE
+        </div>
+    </div>
+
+    <script>
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (savedTheme) {
+            body.dataset.theme = savedTheme;
+            themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+        } else if (prefersDark) {
+            body.dataset.theme = 'dark';
+            themeToggle.textContent = '☀️';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            if (body.dataset.theme === 'dark') {
+                body.dataset.theme = 'light';
+                localStorage.setItem('theme', 'light');
+                themeToggle.textContent = '🌙';
+            } else {
+                body.dataset.theme = 'dark';
+                localStorage.setItem('theme', 'dark');
+                themeToggle.textContent = '☀️';
+            }
+        });
+
+        // WebSocket Connection
+        let socket;
+        const chatContainer = document.getElementById('chatContainer');
+        const micButton = document.getElementById('micButton');
+        const statusBar = document.getElementById('statusBar');
+
+        function initWebSocket() {
+            try {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const host = window.location.host;
+                const url = `${protocol}//${host}/ws`;
+
+                updateStatus('Connecting...', false);
+
+                socket = new WebSocket(url);
+
+                socket.onopen = () => {
+                    updateStatus('Connected ✅', true);
+                    micButton.disabled = false;
+                    micButton.innerHTML = '<i class="fas fa-microphone"></i>';
+                };
+
+                socket.onmessage = async (event) => {
+                    try {
+                        if (event.data instanceof Blob) {
+                            // Audio response
+                            const audioUrl = URL.createObjectURL(event.data);
+                            const audio = new Audio(audioUrl);
+
+                            // Show waveform UI
+                            const msgDiv = document.createElement('div');
+                            msgDiv.className = 'audio-response';
+                            msgDiv.innerHTML = `
+                                <div class="audio-icon"><i class="fas fa-headphones"></i></div>
+                                <div class="audio-waveform">
+                                    <div class="wave"></div>
+                                    <div class="wave"></div>
+                                    <div class="wave"></div>
+                                    <div class="wave"></div>
+                                    <div class="wave"></div>
+                                </div>
+                            `;
+                            chatContainer.appendChild(msgDiv);
+
+                            // Play audio after DOM renders
+                            setTimeout(() => {
+                                audio.play().catch(e => console.warn("Audio play failed:", e));
+                            }, 100);
+
+                            // Auto-scroll
+                            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                        } else {
+                            const text = event.data.trim();
+
+                            if (text.startsWith('USER:')) {
+                                const userMsg = text.replace('USER:', '').trim();
+                                addMessage(userMsg, 'user');
+                            } else if (text.startsWith('AI:')) {
+                                const aiMsg = text.replace('AI:', '').trim();
+                                addMessage(aiMsg, 'ai');
+                            } else if (text.startsWith('ERROR:')) {
+                                showError(text.replace('ERROR:', '').trim());
+                            } else if (text === 'TIMEOUT: Session expired due to inactivity') {
+                                showError('Session timed out. Please restart the conversation.');
+                                micButton.disabled = true;
+                            } else {
+                                addMessage(text, 'ai');
+                            }
+                        }
+                    } catch (e) {
+                        showError('Failed to process response. Try again.');
+                        console.error('Message error:', e);
+                    }
+                };
+
+                socket.onclose = () => {
+                    updateStatus('Disconnected ❌', false);
+                    micButton.disabled = true;
+                    micButton.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+                };
+
+                socket.onerror = (err) => {
+                    updateStatus('Connection Error ❌', false);
+                    micButton.disabled = true;
+                    showError('Network issue. Check connection and retry.');
+                    console.error('WebSocket error:', err);
+                };
+
+            } catch (e) {
+                showError('Failed to connect to server.');
+                console.error('WebSocket init error:', e);
+            }
+        }
+
+        function addMessage(text, sender) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${sender}-message`;
+            msgDiv.innerHTML = `<div>${text}</div><div style="font-size: 0.8rem; margin-top: 8px; opacity: 0.7;">${formatTime(new Date())}</div>`;
+            chatContainer.appendChild(msgDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            chatContainer.appendChild(errorDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+
+        function updateStatus(message, success) {
+            statusBar.textContent = message;
+            statusBar.classList.toggle('show', true);
+            if (success) {
+                statusBar.style.color = '#10b981';
+            } else {
+                statusBar.style.color = '#ef4444';
+            }
+            setTimeout(() => {
+                if (statusBar.classList.contains('show')) {
+                    statusBar.classList.remove('show');
+                }
+            }, 3000);
+        }
+
+        function formatTime(date) {
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Microphone Recording Logic
+        let mediaRecorder;
+        let isRecording = false;
+
+        async function startRecording() {
+            if (isRecording) return;
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+
+                const audioChunks = [];
+                mediaRecorder.ondataavailable = event => {
+                    if (event.data.size > 0) audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    socket.send(audioBlob);
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                micButton.classList.add('recording');
+                micButton.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+
+                // Add visual feedback
+                const listeningMsg = document.createElement('div');
+                listeningMsg.className = 'message ai-message';
+                listeningMsg.innerHTML = `
+                    <div>Listening... Speak now.</div>
+                    <div style="font-size: 0.8rem; margin-top: 8px; opacity: 0.7;">Just now</div>
+                `;
+                chatContainer.appendChild(listeningMsg);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            } catch (err) {
+                showError('Microphone access denied. Please allow permission.');
+                console.error('Mic error:', err);
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                isRecording = false;
+                micButton.classList.remove('recording');
+                micButton.innerHTML = '<i class="fas fa-microphone"></i>';
+            }
+        }
+
+        micButton.addEventListener('click', () => {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        });
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            initWebSocket();
+
+            // Auto-reconnect every 30s if disconnected
+            setInterval(() => {
+                if (socket && socket.readyState === WebSocket.CLOSED) {
+                    initWebSocket();
+                }
+            }, 30000);
+
+            // Prevent accidental page reload on mobile
+            window.addEventListener('beforeunload', (e) => {
+                e.preventDefault();
+                e.returnValue = '';
+            });
+        });
+
+        // Handle focus loss on mobile
+        window.addEventListener('blur', () => {
+            if (isRecording) {
+                stopRecording();
+            }
+        });
+
+        // Optional: Press spacebar to talk
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !e.repeat) {
+                e.preventDefault();
+                if (isRecording) {
+                    stopRecording();
+                } else {
+                    startRecording();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
