@@ -468,13 +468,14 @@ async def websocket_endpoint(websocket: WebSocket):
         await websocket.send_text(f"ERROR: {str(e)}")
         manager.disconnect(websocket)
 
-if __name__ == "__main__":
-    logger.info("Starting JSPM JSCOE Voice AI Agent Backend...")
-    logger.info(f"Configuration: Groq({config.CURRENT_GROQ_MODEL}), Gemini({config.CURRENT_GEMINI_MODEL}), Whisper({config.CURRENT_WHISPER_MODEL})")
-    uvicorn.run(
-        app, 
-        host="0.0.0.0", 
-        port=8000, 
-        log_level="info",
-        access_log=True
-    )
+# ✅ COMMENT OUT OR DELETE THIS ENTIRE BLOCK FOR RENDER DEPLOYMENT
+# if __name__ == "__main__":
+#     logger.info("Starting JSPM JSCOE Voice AI Agent Backend...")
+#     logger.info(f"Configuration: Groq({config.CURRENT_GROQ_MODEL}), Gemini({config.CURRENT_GEMINI_MODEL}), Whisper({config.CURRENT_WHISPER_MODEL})")
+#     uvicorn.run(
+#         app, 
+#         host="0.0.0.0", 
+#         port=8000, 
+#         log_level="info",
+#         access_log=True
+#     )
