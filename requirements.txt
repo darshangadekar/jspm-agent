@@ -5,9 +5,10 @@ groq
 google-generativeai
 sentence-transformers
 scikit-learn
-whisper-tiny
+openai-whisper
 numpy
 pandas
 torch
 torchaudio
+
 TTS
