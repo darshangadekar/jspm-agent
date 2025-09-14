@@ -10,5 +10,4 @@ numpy
 pandas
 torch
 torchaudio
-
 TTS
